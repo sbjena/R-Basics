@@ -1,6 +1,6 @@
 # Matrix
 
-# matrix is a two dimentional vector
+# matrix is a two dimentional vector.
 # all attribute of fuction can be checked with attribute function attribute()
 
 x <- matrix(1:9,nrow = 3,ncol = 3)

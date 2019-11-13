@@ -1,0 +1,119 @@
+---
+title: "Process Boston Data to find most Influencing Features"
+---
+# * output: html_notebook
+# * Author: shasibhusan
+# * Read required Packages 
+
+```{r}
+library(corrplot)
+library(ggplot2)
+library(tidyverse)
+library(corrplot)
+library(car)
+```
+
+# * Below are features types and use
+# * crime per capita crime rate by town.
+# * zn      proportion of residential land zoned for lots over 25,000 sq.ft.
+# * indus   proportion of non-retail business acres per town.
+# * chas    Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+# * nox     nitrogen oxides concentration (parts per 10 million).
+# * rm      average number of rooms per dwelling.
+# * age     proportion of owner-occupied units built prior to 1940.
+# * dis     weighted mean of distances to five Boston employment centres.
+# * rad     index of accessibility to radial highways.
+# * tax     full-value property-tax rate per \$10,000.
+# * ptratio pupil-teacher ratio by town.
+# * black   1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
+# * lstat   lower status of the population (percent).
+# * medv    median value of owner-occupied homes in \$1000s.
+# * Read Boston data Set using Mass Pkg
+
+```{r}
+data(package='MASS')
+data('Boston')
+str(Boston)
+## Setting any name change
+names(Boston) = c('crim','zn','indus','chas','nox','rm','age','dis','rad','tax','ptratio','black','lstat','medv')
+attach(Boston)
+```
+
+# * Find multi collinearity
+
+```{r}
+
+M = cor(Boston)
+head(round(M,2))
+cor.mtest =function(mat) {
+  mat = as.matrix(mat)
+  n = ncol(mat)
+  p.mat= matrix(NA, n, n)
+  diag(p.mat) = 0
+  
+  for (i in 1:(n - 1)) {
+    for (j in (i + 1):n) {
+      # loopval =   paste('i=',i,'j=',j)
+      # print(loopval)
+      tmp = cor.test(mat[, i], mat[, j])
+      p.mat[i, j] = p.mat[j, i] = tmp$p.value
+    }
+  }
+  colnames(p.mat) = rownames(p.mat) = colnames(mat)
+  p.mat
+}
+p.mat=cor.mtest(Boston)
+
+corrplot(M, method = 'circle')
+
+```
+```{r}
+# Leave blank on no significant coefficient
+corrplot(M, type="upper", order="hclust", p.mat = p.mat, sig.level = 0.01, insig = "blank")
+```
+# * Linear Regression Model building
+# * Running model and checking for significant *** features
+```{r}
+str(Boston)
+# Bulding with all attributes, to find most influecning feature
+salesLM_all = lm(medv ~ zn+nox+rm+dis+rad+ptratio+black ,data = Boston)
+summary(salesLM_all)
+```
+
+# * analysing data with different features and combinations
+```{r}
+
+salesLM_nox = lm(medv ~ nox ,data = Boston)
+summary(salesLM_nox)
+
+salesLM_rm = lm(medv ~ rm , data = Boston)
+summary(salesLM_rm)
+
+salesLM_nox_rm = lm(medv  ~ nox + rm+ nox:rm, data = Boston)
+summary(salesLM_nox_rm)
+```
+
+# * after removing un significant features building final model with below features
+# * nox,rm,dis,ptratio,black shows strong co relation.
+
+```{r}
+salesLM_all_after_cleanUP = lm(medv ~ nox+rm+dis+ptratio+black ,data = Boston)
+summary(salesLM_all_after_cleanUP)
+
+```
+
+# * Vif The variance inflation factor (VIF) quantifies the extent of correlation between one predictor and the other predictors in a model.
+
+```{r}
+
+vif(salesLM_all)
+```
+
+
+```{r}
+```
+```{r}
+vif(salesLM_all_after_cleanUP)
+```
+
+
